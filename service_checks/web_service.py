@@ -1,24 +1,18 @@
-"""Web (HTTP) service wrapper."""
+"""Web (HTTP) service check."""
 
 from __future__ import annotations
 
-from pathlib import Path
-
-from service_checks._legacy_loader import load_legacy_function, run_and_assess
-
-_WEB_FUNC = None
+import http.client
 
 
 def run(target_ip: str, target_name: str) -> bool:
-    """Run existing web check and return True when call completes."""
-    global _WEB_FUNC
-    if _WEB_FUNC is None:
-        try:
-            _WEB_FUNC = load_legacy_function(
-                Path(__file__).resolve().parent.parent / "services2" / "WebCheck2.py",
-                "WebCheck",
-            )
-        except Exception:
-            return False
-    return run_and_assess(_WEB_FUNC, target_ip)
+    """Return True when HTTP service responds on port 80."""
+    try:
+        conn = http.client.HTTPConnection(target_ip, 80, timeout=5)
+        conn.request("GET", "/")
+        response = conn.getresponse()
+        conn.close()
+        return 100 <= response.status < 600
+    except Exception:
+        return False
 
