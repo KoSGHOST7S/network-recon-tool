@@ -1,57 +1,43 @@
-"""SSH service check using command-line fingerprint trust workflow.
+"""SSH service check.
 
-Flow:
-1) Run an SSH command as admin with host-key auto-accept enabled.
-2) Confirm the host key is present in known_hosts.
-3) Report SSH as successful only when fingerprint trust is established.
+Implements the same approach as your provided `SSHCheck.py`:
+- Validate TCP connectivity to port 22
+- Attempt SSH auth with paramiko using system host keys
 """
 
 from __future__ import annotations
 
-import subprocess
-from pathlib import Path
+import socket
+
+import paramiko
 
 SSH_USER = "admin"
-KNOWN_HOSTS_FILE = Path.home() / ".ssh" / "known_hosts"
+SSH_PASSWORD = "admin"
+SSH_PORT = 22
 
 def run(target_ip: str, target_name: str) -> bool:
-    """Trust and verify SSH host fingerprint using local ssh/ssh-keygen tools."""
-    # Ensure ~/.ssh exists so known_hosts can be written.
-    KNOWN_HOSTS_FILE.parent.mkdir(parents=True, exist_ok=True)
-
-    # This command performs first-contact trust (accept-new) and exits.
-    # NumberOfPasswordPrompts=0 avoids hanging in non-interactive runs.
-    ssh_cmd = [
-        "ssh",
-        "-o",
-        "StrictHostKeyChecking=accept-new",
-        "-o",
-        f"UserKnownHostsFile={KNOWN_HOSTS_FILE}",
-        "-o",
-        "ConnectTimeout=5",
-        "-o",
-        "NumberOfPasswordPrompts=0",
-        f"{SSH_USER}@{target_ip}",
-        "exit",
-    ]
+    """Return True only when socket and SSH authentication both succeed."""
+    conn_socket = None
+    ssh_client = None
 
     try:
-        subprocess.run(ssh_cmd, check=False, capture_output=True, text=True, timeout=10)
+        # 1) Low-level TCP connectivity check (matches your script pattern).
+        conn_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        conn_socket.settimeout(5.0)
+        conn_socket.connect((target_ip, SSH_PORT))
+        conn_socket.close()
+        conn_socket = None
+
+        # 2) Paramiko SSH check with system host keys and admin credentials.
+        ssh_client = paramiko.SSHClient()
+        ssh_client.load_system_host_keys()
+        ssh_client.connect(target_ip, SSH_PORT, SSH_USER, SSH_PASSWORD, timeout=5.0)
+        return True
     except Exception:
         return False
-
-    # Confirm the host key now exists in known_hosts.
-    verify_cmd = ["ssh-keygen", "-F", target_ip, "-f", str(KNOWN_HOSTS_FILE)]
-    try:
-        verify = subprocess.run(
-            verify_cmd,
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-    except Exception:
-        return False
-
-    return verify.returncode == 0 and bool(verify.stdout.strip())
+    finally:
+        if ssh_client is not None:
+            ssh_client.close()
+        if conn_socket is not None:
+            conn_socket.close()
 
