@@ -12,7 +12,6 @@ from typing import Callable
 
 from service_checks import (
     dns_service,
-    ftp_service,
     imap_service,
     mysql_service,
     ping_service,
@@ -49,7 +48,6 @@ def run_dns(ip: str, name: str) -> bool:
 SERVICE_RUNNERS: dict[str, Callable[[str, str], bool]] = {
     "PING": ping_service.run,
     "DNS": run_dns,
-    "FTP": ftp_service.run,
     "MYSQL": mysql_service.run,
     "WEB": web_service.run,
     "POP3": pop3_service.run,
