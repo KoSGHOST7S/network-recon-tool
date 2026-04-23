@@ -31,7 +31,16 @@ def run(target_ip: str, target_name: str) -> bool:
         # 2) Paramiko SSH check with system host keys and admin credentials.
         ssh_client = paramiko.SSHClient()
         ssh_client.load_system_host_keys()
-        ssh_client.connect(target_ip, SSH_PORT, SSH_USER, SSH_PASSWORD, timeout=5.0)
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh_client.connect(
+            target_ip,
+            SSH_PORT,
+            SSH_USER,
+            SSH_PASSWORD,
+            timeout=5.0,
+            allow_agent=False,
+            look_for_keys=False,
+        )
         return True
     except Exception:
         return False
