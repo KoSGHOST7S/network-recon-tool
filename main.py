@@ -12,12 +12,9 @@ from typing import Callable
 
 from service_checks import (
     dns_service,
-    imap_service,
     mysql_service,
-    ping_service,
-    pop3_service,
-    smtp_service,
     ssh_service,
+    telnet_service,
     web_service,
 )
 
@@ -30,12 +27,11 @@ DNS_SERVER_IP = "192.168.1.10"
 # Each host has an IP, display name, and list of checks to run.
 # Rule: only include checks for services that host actually exposes.
 # Example: 192.168.1.10 has only SSH (22) and DNS (53).
-# Telnet is intentionally excluded.
 TARGETS = [
     {"ip": "192.168.1.10", "name": "ns.mininet.net", "services": ["SSH", "DNS"]},
     {"ip": "192.168.1.11", "name": "mail.mininet.net", "services": ["SSH"]},
     {"ip": "192.168.1.12", "name": "www.mininet.net", "services": ["SSH", "WEB"]},
-    {"ip": "192.168.1.13", "name": "db.mininet.net", "services": ["SSH", "MYSQL"]},
+    {"ip": "192.168.1.13", "name": "db.mininet.net", "services": ["SSH", "TELNET", "MYSQL"]},
     {"ip": "192.168.1.14", "name": "store.mininet.net", "services": ["SSH", "WEB"]},
 ]
 
@@ -46,14 +42,11 @@ def run_dns(ip: str, name: str) -> bool:
 
 
 SERVICE_RUNNERS: dict[str, Callable[[str, str], bool]] = {
-    "PING": ping_service.run,
     "DNS": run_dns,
     "MYSQL": mysql_service.run,
     "WEB": web_service.run,
-    "POP3": pop3_service.run,
-    "IMAP": imap_service.run,
-    "SMTP": smtp_service.run,
     "SSH": ssh_service.run,
+    "TELNET": telnet_service.run,
 }
 
 
