@@ -29,17 +29,14 @@ from service_checks import (
 DNS_SERVER_IP = "192.168.1.10"
 
 # Each host has an IP, display name, and list of checks to run.
+# Rule: only include checks for services that host actually exposes.
 # Telnet is intentionally excluded.
 TARGETS = [
-    {"ip": "192.168.1.10", "name": "ns.mininet.local", "services": ["PING", "DNS"]},
-    {"ip": "192.168.1.12", "name": "www.mininet.local", "services": ["PING", "DNS", "FTP"]},
-    {"ip": "192.168.1.13", "name": "db.mininet.local", "services": ["PING", "DNS", "MYSQL", "WEB"]},
-    {
-        "ip": "192.168.1.11",
-        "name": "mail.mininet.local",
-        "services": ["PING", "DNS", "POP3", "IMAP", "SMTP", "WEB"],
-    },
-    {"ip": "192.168.1.14", "name": "store.mininet.local", "services": ["PING", "DNS", "SSH", "WEB"]},
+    {"ip": "192.168.1.10", "name": "ns.mininet.net", "services": ["PING", "SSH", "DNS"]},
+    {"ip": "192.168.1.11", "name": "mail.mininet.net", "services": ["PING", "SSH"]},
+    {"ip": "192.168.1.12", "name": "www.mininet.net", "services": ["PING", "SSH", "WEB"]},
+    {"ip": "192.168.1.13", "name": "db.mininet.net", "services": ["PING", "SSH", "MYSQL"]},
+    {"ip": "192.168.1.14", "name": "store.mininet.net", "services": ["PING", "SSH", "WEB"]},
 ]
 
 
