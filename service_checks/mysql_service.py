@@ -11,7 +11,7 @@ from __future__ import annotations
 import pymysql
 
 MYSQL_USER = "admin"
-MYSQL_PASSWORD = "changeme"
+MYSQL_PASSWORD = "admin"
 MYSQL_DATABASE = "test"
 MYSQL_QUERY = "select * from test"
 
@@ -25,7 +25,7 @@ def run(target_ip: str, target_name: str) -> bool:
             user=MYSQL_USER,
             password=MYSQL_PASSWORD,
             database=MYSQL_DATABASE,
-            ssl_disabled=True,
+            ssl=None,
             connect_timeout=5,
         )
         with db_conn.cursor() as db_cursor:
