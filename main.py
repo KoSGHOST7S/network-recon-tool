@@ -64,11 +64,19 @@ def score_to_status(score: float) -> str:
     return "RED"
 
 
-def run_target(ip: str, name: str, services: list[str]) -> float:
+def run_target(
+    ip: str,
+    name: str,
+    services: list[str],
+    service_stats: dict[str, dict[str, int]],
+) -> float:
     """Run all configured services for one host and print host summary."""
     passed = 0
 
     for service in services:
+        stats = service_stats.setdefault(service, {"up": 0, "total": 0})
+        stats["total"] += 1
+
         runner = SERVICE_RUNNERS.get(service)
         if runner is None:
             print(f"{service} Check FAILED for: {name}")
@@ -79,6 +87,7 @@ def run_target(ip: str, name: str, services: list[str]) -> float:
         print(f"{service} Check {status} for: {name}")
         if ok:
             passed += 1
+            stats["up"] += 1
 
     success = (passed / len(services)) * 100 if services else 0
     print(f"Success: {success:.0f}%\n")
@@ -88,11 +97,26 @@ def run_target(ip: str, name: str, services: list[str]) -> float:
 def main() -> None:
     """Program entrypoint."""
     host_scores = []
+    service_stats: dict[str, dict[str, int]] = {}
 
     for target in TARGETS:
-        host_scores.append(run_target(target["ip"], target["name"], target["services"]))
+        host_scores.append(
+            run_target(
+                target["ip"],
+                target["name"],
+                target["services"],
+                service_stats,
+            )
+        )
 
     overall = sum(host_scores) / len(host_scores) if host_scores else 0
+    print("Service Uptime:")
+    for service in sorted(service_stats):
+        up = service_stats[service]["up"]
+        total = service_stats[service]["total"]
+        uptime = (up / total) * 100 if total else 0
+        print(f"{service} Uptime: {uptime:.0f}% ({up}/{total})")
+    print()
     print(f"Overall Success: {overall:.0f}%")
     print(f"Status: {score_to_status(overall)}")
 
